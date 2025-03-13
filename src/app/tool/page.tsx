@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import InputLabel from '@/components/InputLabel';
 import InputLabelArray from '@/components/InputLabelArray';
 import Canvas from '@/components/Canvas';
-import { channel } from 'diagnostics_channel';
 
 //import Image from "next/image";
 
