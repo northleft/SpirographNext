@@ -17,13 +17,13 @@ function InputLabel(
     kind?: string,
     min?: number,
     max?: number,
-    value: any,
+    value: string | number | object | Array<[]>,
     isInArray?: boolean,
-    update?: (n: any) => any
+    update?: (obj:object) => void
   }){
 
   const [data, setData] = useState(value);
-  const [isActive, setIsActive] = useState<any>(false);
+  const [isActive, setIsActive] = useState<boolean | object>(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -39,8 +39,7 @@ function InputLabel(
     setData(value);
   }, [value]);
   
-  const isKindNumber = ['integer', 'float'].indexOf(kind) > -1;
-  //const isKindColor = kind == 'color';
+  const isKindNumber:boolean = ['integer', 'float'].indexOf(kind) > -1;
 
   const specialKeys = [
     'Delete',
@@ -54,7 +53,8 @@ function InputLabel(
     'ArrowLeft',
     'ArrowRight'
   ];
-  const handleKey = (event: any) => {
+
+  const handleKey = (event: KeyboardEvent) => {
     const key = event.key;
     const isSpecialKey = event.altKey || event.ctrlKey || event.shiftKey || event.metaKey || specialKeys.indexOf(event.key) > -1;
 
@@ -78,12 +78,9 @@ function InputLabel(
 
     }
   }
-  const handlerOnChange = (event: any) => {
-
-  }
-  const handlerOnBlur = (event: any)  => {
+  const handlerOnBlur = (event: React.MouseEvent<HTMLDivElement>)  => {
     const value = event.target.value;
-    let newValue:any = value;
+    let newValue:number | string = value;
     
     if (kind == 'integer'){
 
@@ -107,19 +104,14 @@ function InputLabel(
     }
   }
   const handleColorClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    const bounds = event.target.getBoundingClientRect();
+    const bounds = (event.target as HTMLDivElement).getBoundingClientRect();
     setIsActive(bounds);
   }
   const colorExit = () => {
     setIsActive(false);
   }
-  const colorUpdate = (v: any) => {
-    
-    //console.log(inputRef);
-    //console.log(v);
-    //inputRef.current.value = v;
+  const colorUpdate = (v: string) => {
     setData(v);
-
     colorExit();
   }
   const returnColorPicker = () => {
@@ -142,7 +134,6 @@ function InputLabel(
           ref={inputRef}
           onKeyDown={handleKey}
           onKeyUp={handleKey}
-          onChange={handlerOnChange}
           onBlur={handlerOnBlur}
           defaultValue={value}
           type="text"

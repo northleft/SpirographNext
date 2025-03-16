@@ -2,17 +2,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import InputLabel from '@/components/InputLabel';
 import InputLabelArray from '@/components/InputLabelArray';
-import Canvas from '@/components/Canvas';
-
-//import Image from "next/image";
+import Canvases from '@/components/Canvases';
+import type {CanvasesHandle} from '@/components/Canvases';
 
 interface GraphState {
-  radius: any,
-  nib: any,
-  nibpx: any,
-  color: any,
-  colors: Array<[]>
+  radius: number;
+  nib: number;
+  nibpx: number;
+  color: string;
+  colors: Array<[]>;
 }
+
+type GraphStateTypes = {
+  [K in keyof GraphState]?: GraphState[K];
+};
+
+const onePI = Math.PI;
+const twoPI = onePI * 2;
   
 const getLoops = (one:number = .5, two:number = 1) => {
   let int:number = 1;
@@ -26,9 +32,6 @@ const getLoops = (one:number = .5, two:number = 1) => {
 
   return int-1;
 }
-
-const onePI = Math.PI;
-const twoPI = onePI * 2;
 
 const getCircle = (
   radius:number = 0,
@@ -61,12 +64,12 @@ const rotatePoint = (theta:number, x:number, y:number, originX:number = 0, origi
   const cos = Math.cos(theta);
   const sin = Math.sin(theta);
 
-  const newX = x * cos - y * sin;
-  const newY = x * sin + y * cos;
+  x = x - originX;
+  y = y - originY;
 
   return {
-    x: newX,
-    y: newY
+    x: x * cos - y * sin + originX,
+    y: x * sin + y * cos + originY
   };
 }
 
@@ -74,11 +77,11 @@ const getBetweenNumbers = (one:number, two:number, pct:number) => {
   return pct * (two - one) + one;
 }
 
-const generateFilname = () => {
+const generateFilename = () => {
   let ret = "";
-  let date = new Date();
+  const date = new Date();
 
-  function gfTwoCharacters(t){
+  function gfTwoCharacters(t:string|number){
     t = t.toString();
     while (t.length < 2){
       t = "0" + t;
@@ -116,9 +119,9 @@ const Tool = () => {
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [animatingInt, setAnimatingInt] = useState(0);
-  //let isAnimating = false;
 
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<CanvasesHandle>(null)
+
   const canvasBuild = () => {
     if (!isAnimating){
       setIsAnimating(true);
@@ -129,7 +132,7 @@ const Tool = () => {
     //canvasRef.current?.canvasDraw();
   }
   const canvasExport = () => {
-    canvasRef.current?.canvasExport()
+    canvasRef.current?.canvasExport();
   }
 
   useEffect(() => {
@@ -142,7 +145,7 @@ const Tool = () => {
     value
   }:{
     key: keyof GraphState,
-    value: any
+    value: GraphState[key]
   }) => {
     const oldValue = graph[key];
 
@@ -156,21 +159,14 @@ const Tool = () => {
 
   useEffect(() => {
     if (isAnimating){
-      canvasRef.current?.canvasDraw()
+      canvasRef.current!.canvasDraw()
     }
 
     // Clean up on component unmount (optional)
     cancelAnimationFrame(animatingInt); 
-
   }, [isAnimating]);
   
-  const drawCanvas = ({
-    drawCTX,
-    uiCTX
-  }:{
-    drawCTX: any,
-    uiCTX: any
-  }) => {
+  const drawCanvas = (drawCTX:CanvasRenderingContext2D, uiCTX:CanvasRenderingContext2D) => {
     const onePI = Math.PI;
     const twoPI = onePI * 2;
     const width = drawCTX.canvas.width;
@@ -189,7 +185,7 @@ const Tool = () => {
 
     drawCTX.clearRect(0, 0, width, height);
 
-    let prev:any = null;
+    let prev:object | null = null;
     let index:number = 0;
 
     const colors = {
@@ -217,95 +213,6 @@ const Tool = () => {
       colors.blue.push(parseInt(hex.substring(4, 6), 16));
     });
 
-    const animate2 = () => {
-      const distance = inc * index;
-      const pct = index / ticks;
-      const parentCircle = getCircle(parentRadius, distance);
-      const circle = getCircle(radius, distance);
-      const tangent = parentCircle.tangent - circle.tangent;
-      const point = rotatePoint(tangent + onePI, circle.x, circle.y);
-      const nibPoint = rotatePoint(
-        tangent,
-        radius * graph.nib,
-        0
-      );
-
-      //console.log(pct, pct * colors.gaps, Math.floor(pct * colors.gaps), pct * colors.gaps - Math.floor(pct * colors.gaps));
-      const colorNumber = pct * colors.gaps;
-      const colorIndex = Math.floor(colorNumber);
-      const colorPct = colorNumber % 1;
-      const drawRed = getBetweenNumbers(colors.red[colorIndex % colors.hexes.length], colors.red[(colorIndex + 1) % colors.hexes.length], colorPct);
-      const drawGreen = getBetweenNumbers(colors.green[colorIndex % colors.hexes.length], colors.green[(colorIndex + 1) % colors.hexes.length], colorPct);
-      const drawBlue = getBetweenNumbers(colors.blue[colorIndex % colors.hexes.length], colors.blue[(colorIndex + 1) % colors.hexes.length], colorPct);
-
-      const drawColor = `rgb(${drawRed}, ${drawGreen}, ${drawBlue})`
-
-      uiCTX.clearRect(0, 0, width, height);
-
-      // parent circle
-      uiCTX.beginPath();
-      uiCTX.strokeStyle = 'rgba(0, 0, 0, 255)';
-      uiCTX.lineWidth = .5;
-      uiCTX.arc(cx, cy, parentCircle.radius, 0, twoPI);
-      uiCTX.stroke();
-
-      // circle circle
-      uiCTX.beginPath();
-      uiCTX.lineWidth = 1.5;
-      uiCTX.strokeStyle = 'red';
-      uiCTX.arc(
-        parentCircle.x + point.x + cx,
-        parentCircle.y + point.y + cy,
-        circle.radius, tangent, tangent + onePI
-      );
-      uiCTX.stroke();
-
-      uiCTX.beginPath();
-      uiCTX.lineWidth = 1.5;
-      uiCTX.strokeStyle = 'blue';
-      uiCTX.arc(
-        parentCircle.x + point.x + cx,
-        parentCircle.y + point.y + cy,
-        circle.radius, tangent + onePI, tangent + twoPI
-      );
-      uiCTX.stroke();
-
-      point.x += nibPoint.x + parentCircle.x;
-      point.y += nibPoint.y + parentCircle.y;
-
-      uiCTX.beginPath();
-      uiCTX.strokeStyle = 'rgba(0, 0, 0, 255)';
-      uiCTX.lineWidth = .75;
-      uiCTX.arc(point.x + cx, point.y + cy, 10, 0, twoPI);
-      uiCTX.stroke();
-
-      if (prev){
-        drawCTX.beginPath();
-        drawCTX.lineWidth = graph.nibpx;
-        drawCTX.strokeStyle = drawColor;
-        drawCTX.moveTo(prev.x + cx, prev.y + cy);
-        drawCTX.lineTo(point.x + cx, point.y + cy);
-        drawCTX.stroke();
-      }
-
-      drawCTX.beginPath();
-      drawCTX.lineWidth = 0;
-      drawCTX.fillStyle = drawColor;
-      drawCTX.arc(point.x + cx, point.y + cy, graph.nibpx / 2, 0, twoPI);
-      drawCTX.fill();
-
-
-
-      prev = point;
-
-      if (isAnimating && index < ticks){
-        index++
-        setAnimatingInt(requestAnimationFrame(animate));
-      } else {
-        setIsAnimating(false)
-      }
-    }
-
     const animate = () => {
 
       for (let i = 0; i < ticksPerLoop; i++){
@@ -320,8 +227,7 @@ const Tool = () => {
           radius * graph.nib,
           0
         );
-  
-        //console.log(pct, pct * colors.gaps, Math.floor(pct * colors.gaps), pct * colors.gaps - Math.floor(pct * colors.gaps));
+        
         const colorNumber = pct * colors.gaps;
         const colorIndex = Math.floor(colorNumber);
         const colorPct = colorNumber % 1;
@@ -391,7 +297,6 @@ const Tool = () => {
       
 
       if (isAnimating && index < ticks){
-        //index++
         setAnimatingInt(requestAnimationFrame(animate));
       } else {
         setIsAnimating(false)
@@ -403,10 +308,13 @@ const Tool = () => {
     setAnimatingInt(int);
   }
 
-  const exportCanvas = (canvas:any) => {
-
-    canvas.toBlob((blob:any) => {
-      window.open(URL.createObjectURL(blob), 'name=' + generateFilname())
+  const exportCanvas = (canvas:HTMLCanvasElement) => {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(
+          window.open(URL.createObjectURL(blob!), 'name=' + generateFilename())
+        )
+      });
     });
   }
 
@@ -471,7 +379,7 @@ const Tool = () => {
           </div>
         </div>
         <div id="spiro-tool-graph" className=" bg-white rounded flex-grow ml-2 relative overflow-hidden">
-          <Canvas
+          <Canvases
             ref={canvasRef}
             dimension={800}
             drawCanvas={drawCanvas}

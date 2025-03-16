@@ -12,7 +12,7 @@ type ClassValue =
   | null
   | boolean
   | undefined;
-type ClassDictionary = Record<string, any>;
+type ClassDictionary = Record<string, number>;
 type ClassArray = ClassValue[];
 function clsx(...inputs: ClassValue[]): string {
   return inputs.filter(Boolean).join(" ");
@@ -54,9 +54,9 @@ function hslToHex({ h, s, l }: hsl) {
   const a = s * Math.min(l, 1 - l);
   const f = (n: number) =>
     l - a * Math.max(Math.min(k(n) - 3, 9 - k(n), 1), -1);
-  let r = Math.round(255 * f(0));
-  let g = Math.round(255 * f(8));
-  let b = Math.round(255 * f(4));
+  const r = Math.round(255 * f(0));
+  const g = Math.round(255 * f(8));
+  const b = Math.round(255 * f(4));
 
   const toHex = (x: number) => {
     const hex = x.toString(16);
@@ -96,7 +96,7 @@ function hexToHsl({ hex }: hex): hsl {
   const min = Math.min(r, g, b);
   let h = 0;
   let s: number;
-  let l = (max + min) / 2;
+  const l = (max + min) / 2;
 
   if (max === min) {
     h = s = 0; // achromatic
@@ -262,8 +262,8 @@ const ColorPicker = ({
   default_value: string,
   top: number,
   left: number,
-  exitHandle: any,
-  update: any
+  exitHandle: () => void,
+  update: () => void
 }) => {
   // Initialize from controlled prop or a default
   const [color, setColor] = useState<Color>(() => {
@@ -381,7 +381,7 @@ const ColorPicker = ({
           onChange={(e) => {
             const hue = e.target.valueAsNumber;
             setColor((prev) => {
-              const { hex, ...rest } = { ...prev, h: hue };
+              const {...rest } = { ...prev, h: hue };
               const hex_formatted = hslToHex({ ...rest });
               return { ...rest, hex: hex_formatted };
             });

@@ -74,8 +74,6 @@ function InputLabelArray(
   }
 
   const deleteItem = (deleteIndex:number) => {
-    console.log(deleteIndex);
-    console.log(data);
     const newData:Array<[]> = [];
     data.map((item, i) => {
       if (deleteIndex != i){
