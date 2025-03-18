@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import InputLabel from "./InputLabel";
-
 
 const DeletIcon = (props: React.ComponentPropsWithoutRef<"svg">) => {
   return (
@@ -33,9 +32,15 @@ function InputLabelArray(
     label?: string,
     itemLabel?: string,
     kind: string,
-    value?: Array<[]>,
-    defaultValue?: any,
-    update?: (n: any) => any
+    value?: (boolean | string | number | object | [])[],
+    defaultValue?: boolean | string | number | object | [],
+    update?: ({
+      key,
+      value
+    }:{
+      key: string,
+      value: boolean | string | number | object | []
+    }) => void
   }){
 
   const [data, setData] = useState(value);
@@ -55,10 +60,11 @@ function InputLabelArray(
     key,
     value
   }:{
-    key: any,
-    value: any
+    key: number | string,
+    value: boolean | string | number | object | []
   }) => {
-    const newData = [...data];
+    const newData:(boolean | string | number | object | [])[] = [...data];
+    key = Number(key);
     newData[key] = value;
     setData(newData)
   }
@@ -74,13 +80,12 @@ function InputLabelArray(
   }
 
   const deleteItem = (deleteIndex:number) => {
-    const newData:Array<[]> = [];
+    const newData:(boolean | string | number | object | [])[] = [];
     data.map((item, i) => {
       if (deleteIndex != i){
         newData.push(item);
       }
     });
-    console.log(newData);
 
     setData(newData);
   }
@@ -98,11 +103,11 @@ function InputLabelArray(
             onClick={() => {
               deleteItem(index);
             }}
-          >X</button>
+          ><DeletIcon width={20} height={20}/></button>
           <InputLabel
             key={index}
             label={itemLabel + ' ' + (index + 1)}
-            name={index}
+            name={String(index)}
             kind={kind}
             value={item}
             update={inputUpdated}

@@ -5,17 +5,26 @@ import InputLabelArray from '@/components/InputLabelArray';
 import Canvases from '@/components/Canvases';
 import type {CanvasesHandle} from '@/components/Canvases';
 
-interface GraphState {
-  radius: number;
+interface GraphState {radius: number;
   nib: number;
   nibpx: number;
   color: string;
-  colors: Array<[]>;
+  colors: [];
+  [key: string]: boolean | string | number | [] | object;
 }
 
-type GraphStateTypes = {
-  [K in keyof GraphState]?: GraphState[K];
-};
+interface ColorList {
+  hexes: string[];
+  red: number[];
+  green: number[];
+  blue: number[];
+  gap: number,
+  gaps: number
+}
+
+//type GraphStateTypes = {
+//  [K in keyof GraphState]?: GraphState[K];
+//};
 
 const onePI = Math.PI;
 const twoPI = onePI * 2;
@@ -109,6 +118,14 @@ const generateFilename = () => {
 const Tool = () => {
   //let tempRadius:number = parseFloat((Math.floor(Math.random() * 50) / 100 + .1).toPrecision(2));
 
+  //const initialGraph:GraphState = {
+  //  radius: parseFloat((Math.floor(Math.random() * 50) / 100 + .1).toPrecision(3)),
+  //  nib: .85,
+  //  nibpx: 2,
+  //  color: '#1C9484',
+  //  colors: []
+  //}
+
   const [graph, setGraph] = useState<GraphState>({
     radius: parseFloat((Math.floor(Math.random() * 50) / 100 + .1).toPrecision(3)),
     nib: .85,
@@ -116,6 +133,15 @@ const Tool = () => {
     color: '#1C9484',
     colors: []
   });
+
+  /*
+  const tt = {};
+  for (const key of Object.keys(graph)) {
+    //console.log(`${key}: ${DataRecord[key]}`);
+    tt[key] = function(value:GraphState[key]){
+    }
+  }
+  */
 
   const [isAnimating, setIsAnimating] = useState(false);
   const [animatingInt, setAnimatingInt] = useState(0);
@@ -144,8 +170,8 @@ const Tool = () => {
     key,
     value
   }:{
-    key: keyof GraphState,
-    value: GraphState[key]
+    key: string,
+    value: boolean | string | number | object | []
   }) => {
     const oldValue = graph[key];
 
@@ -185,10 +211,13 @@ const Tool = () => {
 
     drawCTX.clearRect(0, 0, width, height);
 
-    let prev:object | null = null;
+    const prev = {
+      x: -9999,
+      y: -9999
+    };
     let index:number = 0;
 
-    const colors = {
+    const colors:ColorList = {
       hexes: [graph.color, ...graph.colors],
       red: [],
       green: [],
@@ -276,7 +305,7 @@ const Tool = () => {
         uiCTX.arc(point.x + cx, point.y + cy, 10, 0, twoPI);
         uiCTX.stroke();
   
-        if (prev){
+        if (prev.x != -9999 && prev.y != -9999){
           drawCTX.beginPath();
           drawCTX.lineWidth = graph.nibpx;
           drawCTX.strokeStyle = drawColor;
@@ -291,7 +320,9 @@ const Tool = () => {
         drawCTX.arc(point.x + cx, point.y + cy, graph.nibpx / 2, 0, twoPI);
         drawCTX.fill();
   
-        prev = point;
+        //prev = {...point};
+        prev.x = point.x;
+        prev.y = point.y;
         index++;
       }
       

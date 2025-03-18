@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import ColorPicker from "./ColorPicker";
 
+//interface isActiveType {
+//  top: number;
+//  left: number;
+//  height: number;
+//}
+
 function InputLabel(
   {
     name = 'undefinedname',
@@ -12,18 +18,30 @@ function InputLabel(
     isInArray = false,
     update
   }:{
-    name: string | number,
+    name: string,
     label?: string,
     kind?: string,
     min?: number,
     max?: number,
-    value: string | number | object | Array<[]>,
+    value: boolean | string | number | object | [],
     isInArray?: boolean,
-    update?: (obj:object) => void
+    update?: ({
+      key,
+      value
+    }:{
+      key: string,
+      value: boolean | string | number | object | []
+    }) => void
   }){
 
   const [data, setData] = useState(value);
-  const [isActive, setIsActive] = useState<boolean | object>(false);
+  const [isActive, setIsActive] = useState<boolean>(false);
+  const [isActivePosition, setIsActivePosition] = useState({
+    top: 0,
+    left: 0,
+    height: 0
+  });
+
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -54,7 +72,7 @@ function InputLabel(
     'ArrowRight'
   ];
 
-  const handleKey = (event: KeyboardEvent) => {
+  const handleKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
     const key = event.key;
     const isSpecialKey = event.altKey || event.ctrlKey || event.shiftKey || event.metaKey || specialKeys.indexOf(event.key) > -1;
 
@@ -78,48 +96,61 @@ function InputLabel(
 
     }
   }
-  const handlerOnBlur = (event: React.MouseEvent<HTMLDivElement>)  => {
-    const value = event.target.value;
-    let newValue:number | string = value;
+
+  const handlerOnBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    let newValue:string | number = event.target.value;
     
-    if (kind == 'integer'){
+    if (isKindNumber){
+      newValue = Number(newValue);
+      
+      if (kind == 'float'){
+        newValue = parseFloat(newValue.toString().replace(/[^-?\d+(\.\d+)?]/g, ''));
+      }
+      if (kind == 'integer'){
+        newValue = parseInt(newValue.toString().replace(/[^0-9.,\-]/g,''));
+      }
 
-    } else if (kind == 'float'){
-      newValue = parseFloat(newValue.replace(/[^-?\d+(\.\d+)?]/g, ''));
-    } else if (kind == 'integer'){
-      newValue = parseInt(newValue.replace(/[^0-9.,\-]/g,''));
-    }
+      if (min != undefined){
+        newValue = Math.max(min, newValue);
+      }
 
-    if (isKindNumber && min != undefined){
-      newValue = Math.max(min, newValue);
-    }
-
-    if (isKindNumber && max != undefined){
-      newValue = Math.min(max, newValue);
+      if (max != undefined){
+        newValue = Math.min(max, newValue);
+      }
     }
 
     if (newValue != data){
       setData(newValue);
-      event.target.value = newValue;
+      event.target.value = String(newValue);
     }
   }
+
   const handleColorClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const bounds = (event.target as HTMLDivElement).getBoundingClientRect();
-    setIsActive(bounds);
+    setIsActivePosition({
+      top: bounds.top,
+      left: bounds.left,
+      height: bounds.height
+    })
+    
+    setIsActive(true);
   }
+
   const colorExit = () => {
     setIsActive(false);
   }
+
   const colorUpdate = (v: string) => {
     setData(v);
     colorExit();
   }
+  
   const returnColorPicker = () => {
-    if (isActive){
+    if (isActive && typeof data == 'string'){
       return <ColorPicker
         default_value={data}
-        top={isActive.top + isActive.height}
-        left={isActive.left}
+        top={isActivePosition.top + isActivePosition.height}
+        left={isActivePosition.left}
         exitHandle={colorExit}
         update={colorUpdate}
       />
@@ -135,7 +166,7 @@ function InputLabel(
           onKeyDown={handleKey}
           onKeyUp={handleKey}
           onBlur={handlerOnBlur}
-          defaultValue={value}
+          defaultValue={String(value)}
           type="text"
           className="bg-slate-200 border-stone-400 border-1 w-14 text-sm px-2 py-1 outline-none rounded-md">
         </input>
@@ -150,7 +181,7 @@ function InputLabel(
             readOnly
             ref={inputRef}
             onClick={handleColorClick}
-            value={data}
+            value={String(value)}
             type="text"
             className="bg-slate-200 border-stone-400 border-1 w-[102px] text-sm px-2 py-1 outline-none rounded-md cursor-pointer">
           </input>
@@ -162,7 +193,7 @@ function InputLabel(
             <div
               className="size-5 rounded-md"
               style={{
-                backgroundColor: data,
+                backgroundColor: String(data),
               }}
             />
           </div>

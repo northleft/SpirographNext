@@ -257,13 +257,13 @@ const ColorPicker = ({
   top = 0,
   left = 0,
   exitHandle = () => {},
-  update = () => {},
+  update = (color:string) => {console.log(color)},
 }:{
   default_value: string,
   top: number,
   left: number,
   exitHandle: () => void,
-  update: () => void
+  update: (color:string) => void
 }) => {
   // Initialize from controlled prop or a default
   const [color, setColor] = useState<Color>(() => {
@@ -428,7 +428,14 @@ const ColorPicker = ({
           </div>
         </div>
           <div className="w-full flex justify-around flex-row gap-4">
-            <button className="bg-gray-300 px-2 py-1 rounded flex-1" onClick={() => {update('#' + color.hex);}}>OK</button>
+            <button
+              className="bg-gray-300 px-2 py-1 rounded flex-1"
+              onClick={
+                () => {
+                  update('#' + color.hex);
+                }
+              }
+            >OK</button>
             <button className="bg-gray-300 px-2 py-1 rounded flex-1" onClick={exitHandle}>CANCEL</button>
           </div>
       </div>
