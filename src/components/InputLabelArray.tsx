@@ -6,14 +6,12 @@ const DeletIcon = (props: React.ComponentPropsWithoutRef<"svg">) => {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth={2.5}
       {...props}
     >
-      <path
-        fillRule="evenodd"
-        d="M11.097 1.515a.75.75 0 0 1 .589.882L10.666 7.5h4.47l1.079-5.397a.75.75 0 1 1 1.47.294L16.665 7.5h3.585a.75.75 0 0 1 0 1.5h-3.885l-1.2 6h3.585a.75.75 0 0 1 0 1.5h-3.885l-1.08 5.397a.75.75 0 1 1-1.47-.294l1.02-5.103h-4.47l-1.08 5.397a.75.75 0 1 1-1.47-.294l1.02-5.103H3.75a.75.75 0 0 1 0-1.5h3.885l1.2-6H5.25a.75.75 0 0 1 0-1.5h3.885l1.08-5.397a.75.75 0 0 1 .882-.588ZM10.365 9l-1.2 6h4.47l1.2-6h-4.47Z"
-        clipRule="evenodd"
-      />
+      <line x1="1" y1="1" x2="21" y2="21"/>
+      <line x1="1" y1="21" x2="21" y2="1"/>
     </svg>
   );
 };
@@ -99,11 +97,11 @@ function InputLabelArray(
       {data.map((item, index) => (
         <div key={index} className="flex mb-2 justify-center items-center">
           <button
-            className="aspect-square rounded-full bg-slate-200 w-[30px] h-[30px]"
+            className="aspect-square rounded-full bg-slate-200 w-[30px] h-[30px] flex items-center justify-around"
             onClick={() => {
               deleteItem(index);
             }}
-          ><DeletIcon width={20} height={20}/></button>
+          ><DeletIcon width={16} height={16}/></button>
           <InputLabel
             key={index}
             label={itemLabel + ' ' + (index + 1)}
